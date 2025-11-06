@@ -125,12 +125,13 @@ app.get('/api/storage/users', async (req,res)=>{
 });
 
 
-app.get('/', (req,res)=> res.send('API radi. Frontend u devu: http://localhost:5173'));
-
 const clientDist = path.join(__dirname, '..', 'vite-project-client', 'dist');
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
   app.get('*', (req,res)=> res.sendFile(path.join(clientDist, 'index.html')));
+}else {
+  // Dev poruka samo ako nema builda
+  app.get('/', (req, res) => res.send('API radi. Frontend u devu: http://localhost:5173'));
 }
 
 app.listen(PORT, ()=> console.log('Listening on http://localhost:'+PORT));
