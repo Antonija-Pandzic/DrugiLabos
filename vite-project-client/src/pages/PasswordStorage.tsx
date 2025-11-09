@@ -8,6 +8,7 @@ export default function PasswordStorage({ insecure }:{ insecure:boolean }){
   const [rows,setRows] = useState<Row[]>([]);
 
   async function register(){
+    if (!username || !password) return;
     await fetch('/api/register',{
       method:'POST',
       credentials:'include',
@@ -27,20 +28,22 @@ export default function PasswordStorage({ insecure }:{ insecure:boolean }){
 
   return (
     <section>
-      <h2>Nesigurna pohrana lozinke ({insecure ? 'PLAINTEXT – RANJIVO' : 'HASH – SIGURNO'})</h2>
-      <p>{insecure
-        ? 'Lozinka se sprema u čitljivom obliku (plaintext).'
-        : 'Lozinka se hashira (bcrypt) prije pohrane.'}
+
+      <h2>({insecure ? 'PLAINTEXT – RANJIVO' : 'HASH – SIGURNO'})</h2>
+      <p>
+        {insecure
+          ? 'Lozinka se sprema u čitljivom obliku (plaintext).'
+          : 'Lozinka se hashira (bcrypt) prije pohrane.'}
       </p>
 
       <div style={{display:'flex', gap:8, marginBottom:12}}>
-        <input placeholder="username" value={username} onChange={e=>setUsername(e.target.value)} />
-        <input placeholder="password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
+        <input placeholder="korisnickoIme" value={username} onChange={e=>setUsername(e.target.value)} />
+        <input placeholder="lozinka" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
         <button onClick={register}>Registriraj</button>
       </div>
 
       <table>
-        <thead><tr><th>Username</th><th>Stored password</th></tr></thead>
+        <thead><tr><th>Korisničko ime</th><th>Lozinka</th></tr></thead>
         <tbody>
           {rows.map((r,i)=>(
             <tr key={i}>

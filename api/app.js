@@ -19,36 +19,22 @@ const pool = new Pool({
 
 
 async function initDb() {
- 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users(
       id SERIAL PRIMARY KEY,
       username TEXT UNIQUE,
-      email TEXT,
+      email    TEXT,
       password TEXT
     );
   `);
 
-  
-  await pool.query(`
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'users' AND column_name = 'password'
-      ) THEN
-        ALTER TABLE users ADD COLUMN password TEXT;
-      END IF;
-    END$$;
-  `);
-
-  
-  const { rows } = await pool.query(`SELECT COUNT(*)::int AS c FROM users;`);
-  if (rows[0].c === 0) {
+ 
+  if (process.env.SEED === '1') {
     await pool.query(`
-      INSERT INTO users(username,email,password) VALUES
+      INSERT INTO users (username, email, password) VALUES
       ('admin','admin@example.com', NULL),
-      ('user','user@example.com',  NULL);
+      ('user','user@example.com',  NULL)
+      ON CONFLICT (username) DO NOTHING;
     `);
   }
 }
@@ -63,19 +49,22 @@ app.use(session({
   cookie: { httpOnly: true }
 }));
 
-// --- flags ---
+
+
+//Zastavice za ranjivosti.
 const FLAGS = {
   XSS_ENABLED: true,                 // reflektirani XSS demo
   INSECURE_STORAGE_ENABLED: true     // true = pohrana lozinke u plaintextu (NESIGURNO)
 };
 
-// --- health ---
+
+//Provjera aplikacije.
 app.get('/api/health', async (req,res)=>{
   try { await pool.query('SELECT 1'); res.json({ok:true}); }
   catch (e) { res.status(500).json({ok:false, error:String(e)}); }
 });
 
-// --- flags API ---
+
 app.get('/api/flags', (req,res)=> res.json(FLAGS));
 app.post('/api/toggle', (req,res)=>{
   const { key } = req.body || {};
@@ -83,7 +72,8 @@ app.post('/api/toggle', (req,res)=>{
   res.json(FLAGS);
 });
 
-// --- XSS echo (reflected) ---
+
+
 app.post('/api/xss/echo', (req,res)=>{
   const { text } = req.body || {};
   res.json({ ok:true, text: String(text || '') });
@@ -130,7 +120,6 @@ if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
   app.get('*', (req,res)=> res.sendFile(path.join(clientDist, 'index.html')));
 }else {
-  // Dev poruka samo ako nema builda
   app.get('/', (req, res) => res.send('API radi. Frontend u devu: http://localhost:5173'));
 }
 
